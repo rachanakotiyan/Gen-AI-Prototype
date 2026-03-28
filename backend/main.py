@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles   #add
+# from fastapi.staticfiles import StaticFiles   #add
 from routes.chat import router as chat_router
 from db.mongo import connect_db, disconnect_db
 
@@ -23,7 +23,7 @@ async def shutdown():
     await disconnect_db()
 
 app.include_router(chat_router, prefix="/api")
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+# app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 @app.get("/")
 async def root():
