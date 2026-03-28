@@ -8,7 +8,7 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 async def call_llm(system_prompt: str, user_message: str, json_mode: bool = False) -> str:
     model = genai.GenerativeModel(
-        model_name="gemini-2.0-flash",
+        model_name="gemini-2.5-flash",
         system_instruction=system_prompt
     )
 
