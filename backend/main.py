@@ -1,9 +1,18 @@
-﻿from fastapi import FastAPI
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles   #add
 from routes.chat import router as chat_router
 from db.mongo import connect_db, disconnect_db
 
 app = FastAPI(title="ET AI Concierge", version="1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 async def startup():
