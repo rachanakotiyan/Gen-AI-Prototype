@@ -1,72 +1,122 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import ChatBox from "./components/ChatBox";
-import Message from "./components/Message";
 import ProfileCard from "./components/ProfileCard";
 import Recommendations from "./components/Recommendations";
 import Actions from "./components/Actions";
+import { sendChatMessage } from "./services/api_service";
+import "./App.css";
 
+/**
+ * Main App Component
+ * AI-powered financial concierge chat interface with structured data display
+ */
 function App() {
   const [messages, setMessages] = useState([]);
-  const [data, setData] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
+  const [nextAction, setNextAction] = useState(null);
 
-  const handleSend = async (msg) => {
-    // show user message
-    setMessages((prev) => [...prev, { text: msg, sender: "user" }]);
+  const handleSendMessage = useCallback(
+    async (messageText) => {
+      if (!messageText.trim() || isLoading) return;
 
-    try {
-      const res = await fetch("http://localhost:5000/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          session_id: "abc123",
-          message: msg,
-        }),
-      });
+      try {
+        // Add user message to chat
+        const userMessage = {
+          text: messageText,
+          sender: "user",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, userMessage]);
+        setIsLoading(true);
 
-      const response = await res.json();
+        // Send to API
+        const response = await sendChatMessage(messageText, userId);
 
-      // show bot reply
-      setMessages((prev) => [
-        ...prev,
-        { text: response.reply, sender: "bot" },
-      ]);
+        // Save user_id from first response
+        if (!userId && response.user_id) {
+          setUserId(response.user_id);
+        }
 
-      // update structured UI
-      setData({
-        profile: `${response.profile.role} (${response.profile.experience_level})`,
-        recommendations: response.recommendations.map(r => r.name),
-        actions: ["Explore now", "Learn more"],
-      });
+        // Add AI response to chat
+        const aiMessage = {
+          text: response.response,
+          sender: "ai",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, aiMessage]);
 
-    } catch (error) {
-      console.error("API Error:", error);
-    }
-  };
+        // Update structured data
+        if (response.profile) {
+          setProfile(response.profile);
+        }
+        if (response.recommendations) {
+          setRecommendations(response.recommendations);
+        }
+        if (response.next_action) {
+          setNextAction(response.next_action);
+        }
+      } catch (error) {
+        console.error("Error sending message:", error);
+
+        // Add error message
+        const errorMessage = {
+          text: "Sorry, I encountered an error. Please try again.",
+          sender: "ai",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [userId, isLoading]
+  );
 
   return (
-    <div style={{ maxWidth: "600px", margin: "auto", padding: "20px" }}>
-      <h1>ET AI Concierge 💡</h1>
-
-      {/* Chat messages */}
-      <div style={{ minHeight: "300px" }}>
-        {messages.map((m, i) => (
-          <Message key={i} text={m.text} sender={m.sender} />
-        ))}
-      </div>
-
-      {/* Chat input */}
-      <ChatBox onSend={handleSend} />
-
-      {/* Structured Output */}
-      {data && (
-        <div>
-          <ProfileCard profile={data.profile} />
-          <Recommendations items={data.recommendations} />
-          <Actions items={data.actions} />
+    <div className="app-container">
+      {/* Header */}
+      <header className="app-header">
+        <div className="header-content">
+          <div className="header-title">
+            <h1>💰 Financial Concierge AI</h1>
+            <p>Your personalized financial advisor</p>
+          </div>
+          <div className="header-badge">
+            {userId && <span className="session-badge">Session Active</span>}
+          </div>
         </div>
-      )}
+      </header>
+
+      {/* Main Content */}
+      <main className="app-main">
+        {/* Chat Section (70%) */}
+        <section className="chat-section">
+          <ChatBox
+            messages={messages}
+            onSend={handleSendMessage}
+            isLoading={isLoading}
+          />
+        </section>
+
+        {/* Sidebar Section (30%) */}
+        <aside className="sidebar-section">
+          <div className="sidebar-content">
+            <ProfileCard profile={profile} />
+            <Recommendations recommendations={recommendations} />
+            <Actions nextAction={nextAction} />
+          </div>
+        </aside>
+      </main>
+
+      {/* Footer */}
+      <footer className="app-footer">
+        <p>
+          💡 Powered by AI | All recommendations are for educational purposes
+        </p>
+      </footer>
     </div>
   );
 }
