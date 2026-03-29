@@ -5,6 +5,8 @@ import uuid
 import asyncio
 import time
 from collections import defaultdict, deque
+import sys
+import traceback
 
 from agents.profiling_agent import run_profiling_agent
 from agents.intent_agent import run_intent_agent
@@ -78,10 +80,17 @@ async def chat(request: Request, payload: ChatRequest):
         full_conversation = f"{history_text}\nUser: {user_message}".strip()
 
         # --- Run profiling + intent IN PARALLEL ---
-        profiling_result, intent = await asyncio.gather(
-            run_profiling_agent(full_conversation),
-            run_intent_agent(full_conversation)   # full context, not just latest message
-        )
+        try:
+            profiling_result, intent = await asyncio.gather(
+                run_profiling_agent(full_conversation),
+                run_intent_agent(full_conversation)   # full context, not just latest message
+            )
+            print(f"✅ Profiling & Intent agents completed")
+        except Exception as e:
+            print(f"❌ Error in profiling/intent agents: {str(e)}", file=sys.stderr)
+            print(traceback.format_exc(), file=sys.stderr)
+            sys.stderr.flush()
+            raise
 
         # Merge profile — never overwrite known data with null
         merged_profile = {**existing_profile}
@@ -92,18 +101,39 @@ async def chat(request: Request, payload: ChatRequest):
         merged_profile["conversation_turn"] = conversation_turn
 
         # --- Recommendations + action sequentially (action depends on recs) ---
-        recommendations = await run_recommendation_agent(merged_profile, intent)
+        try:
+            recommendations = await run_recommendation_agent(merged_profile, intent)
+            print(f"✅ Recommendation agent completed")
+        except Exception as e:
+            print(f"❌ Error in recommendation agent: {str(e)}", file=sys.stderr)
+            print(traceback.format_exc(), file=sys.stderr)
+            sys.stderr.flush()
+            raise
 
-        top_rec = recommendations[0] if recommendations else {}
-        action = await run_action_agent(merged_profile, intent, top_rec)
+        try:
+            top_rec = recommendations[0] if recommendations else {}
+            action = await run_action_agent(merged_profile, intent, top_rec)
+            print(f"✅ Action agent completed")
+        except Exception as e:
+            print(f"❌ Error in action agent: {str(e)}", file=sys.stderr)
+            print(traceback.format_exc(), file=sys.stderr)
+            sys.stderr.flush()
+            raise
 
         # --- Response agent gets FULL context ---
-        response_text = await run_response_agent(
-            full_conversation,   # entire history, not just latest message
-            merged_profile,
-            recommendations,
-            action
-        )
+        try:
+            response_text = await run_response_agent(
+                full_conversation,   # entire history, not just latest message
+                merged_profile,
+                recommendations,
+                action
+            )
+            print(f"✅ Response agent completed")
+        except Exception as e:
+            print(f"❌ Error in response agent: {str(e)}", file=sys.stderr)
+            print(traceback.format_exc(), file=sys.stderr)
+            sys.stderr.flush()
+            raise
 
         # --- Persist ---
         await asyncio.gather(
@@ -121,7 +151,11 @@ async def chat(request: Request, payload: ChatRequest):
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        error_details = traceback.format_exc()
+        print(f"❌ ERROR in /chat endpoint:", file=sys.stderr)
+        print(error_details, file=sys.stderr)
+        sys.stderr.flush()
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
 
 @router.get("/profile/{user_id}")
