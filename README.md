@@ -6,6 +6,14 @@ This is a prototype for an AI-powered financial concierge chat application desig
 
 The system uses advanced AI agents to analyze user intent, build user profiles, generate contextual recommendations, and suggest actionable next steps, all powered by Google's Generative AI (Gemini) and a modern React frontend.
 
+## Live Demo
+
+Frontend (User Interface):
+👉 https://et-genai.vercel.app/
+
+Backend API:
+👉 https://gen-ai-prototype-production.up.railway.app/
+
 ## Features
 
 - **Intelligent Chat Interface**: Conversational AI that understands financial queries and provides contextual responses
