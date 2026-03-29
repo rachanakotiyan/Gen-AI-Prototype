@@ -26,7 +26,7 @@ async def call_llm(system_prompt: str, user_message: str, json_mode: bool = Fals
         return _openai_cache[cache_key][0]
 
     model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
+        model_name="gemini-2.0-flash",
         system_instruction=system_prompt
     )
 
