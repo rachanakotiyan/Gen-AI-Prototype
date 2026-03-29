@@ -1,8 +1,10 @@
-﻿from fastapi import APIRouter, HTTPException
+﻿from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from typing import Optional
 import uuid
 import asyncio
+import time
+from collections import defaultdict, deque
 
 from agents.profiling_agent import run_profiling_agent
 from agents.intent_agent import run_intent_agent
@@ -12,6 +14,24 @@ from agents.response_agent import run_response_agent
 from services.db_service import upsert_profile, get_profile, save_chat, get_chat_history
 
 router = APIRouter()
+
+# Basic in-memory rate limiting (per user_id and per IP)
+RATE_LIMIT_REQUESTS = 20
+RATE_LIMIT_WINDOW_SEC = 60
+_rate_limit_store = defaultdict(deque)
+_rate_limit_lock = asyncio.Lock()
+
+async def check_rate_limit(key: str):
+    now = time.time()
+    window_start = now - RATE_LIMIT_WINDOW_SEC
+    async with _rate_limit_lock:
+        queue = _rate_limit_store[key]
+        while queue and queue[0] < window_start:
+            queue.popleft()
+        if len(queue) >= RATE_LIMIT_REQUESTS:
+            return False
+        queue.append(now)
+        return True
 
 class ChatRequest(BaseModel):
     message: str
@@ -26,10 +46,21 @@ class ChatResponse(BaseModel):
     conversation_turn: int
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
+async def chat(request: Request, payload: ChatRequest):
     try:
-        user_id = request.user_id or str(uuid.uuid4())
-        user_message = request.message
+        user_id = payload.user_id or str(uuid.uuid4())
+        user_message = payload.message
+
+        client_ip = request.client.host if request.client else "unknown"
+
+        # Rate limit per user & per IP
+        user_key = f"user:{user_id}"
+        ip_key = f"ip:{client_ip}"
+
+        if not await check_rate_limit(user_key):
+            raise HTTPException(status_code=429, detail="Too many requests for this user. Please wait.")
+        if not await check_rate_limit(ip_key):
+            raise HTTPException(status_code=429, detail="Too many requests from this IP. Please wait.")
 
         # --- Fetch existing state ---
         existing_profile, chat_history = await asyncio.gather(
