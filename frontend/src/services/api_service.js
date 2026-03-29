@@ -36,7 +36,7 @@ export const getAPIStatus = () => ({
   usingMock: USE_MOCK,
   apiUrl: USE_MOCK
     ? "MOCK API"
-    : "https://gen-ai-prototype-production.up.railway.app",
+    : process.env.REACT_APP_API_URL || "https://gen-ai-prototype-production.up.railway.app",
 });
 
 const apiService = { sendChatMessage, getAPIStatus };

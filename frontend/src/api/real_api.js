@@ -1,9 +1,9 @@
 /**
  * Real API Service
- * Connects to the live backend at Railway
+ * Connects to the live backend or falls back to env variable
  */
 
-const BASE_URL = "https://gen-ai-prototype-production.up.railway.app";
+const BASE_URL = process.env.REACT_APP_API_URL || "https://gen-ai-prototype-production.up.railway.app";
 
 /**
  * Send a chat message to the real backend
