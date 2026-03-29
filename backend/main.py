@@ -10,7 +10,7 @@ app = FastAPI(title="ET AI Concierge", version="1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://et-genai.vercel.app", "*"], # Explicitly allow Vercel frontend, and keep wildcard for flexibility
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
