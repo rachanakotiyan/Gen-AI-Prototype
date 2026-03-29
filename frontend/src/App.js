@@ -3,7 +3,7 @@ import ChatBox from "./components/ChatBox";
 import ProfileCard from "./components/ProfileCard";
 import Recommendations from "./components/Recommendations";
 import Actions from "./components/Actions";
-import { sendChatMessage } from "./services/api_service";
+import { sendChatMessage, getAPIStatus } from "./services/api_service";
 import "./App.css";
 
 /**
@@ -16,14 +16,16 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [profile, setProfile] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
-  const [nextAction, setNextAction] = useState(null);
+  const [actions, setActions] = useState([]);
+
+  const apiStatus = getAPIStatus();
 
   const handleSendMessage = useCallback(
     async (messageText) => {
       if (!messageText.trim() || isLoading) return;
 
       try {
-        // Add user message to chat
+        // Add user message to chat immediately
         const userMessage = {
           text: messageText,
           sender: "user",
@@ -35,35 +37,48 @@ function App() {
         // Send to API
         const response = await sendChatMessage(messageText, userId);
 
-        // Save user_id from first response
+        // Persist user_id from first response for session continuity
         if (!userId && response.user_id) {
           setUserId(response.user_id);
         }
 
-        // Add AI response to chat
+        // Add AI reply to chat — field is "reply" (new schema) or "response" (old schema)
         const aiMessage = {
-          text: response.response,
+          text: response.reply || response.response || "No response received.",
           sender: "ai",
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, aiMessage]);
 
-        // Update structured data
+        // Update sidebar panels with structured data
         if (response.profile) {
           setProfile(response.profile);
         }
+
         if (response.recommendations) {
-          setRecommendations(response.recommendations);
+          // ensure "title" exists even if backend returned "service" (old schema)
+          const mappedRecs = response.recommendations.map((r) => ({
+            ...r,
+            title: r.title || r.service,
+          }));
+          setRecommendations(mappedRecs);
         }
-        if (response.next_action) {
-          setNextAction(response.next_action);
+
+        if (response.actions) {
+          setActions(response.actions);
+        } else if (response.next_action) {
+          // fallback for old schema
+          const fallbackActions = [];
+          if (response.next_action.action_title) {
+            fallbackActions.push(`${response.next_action.action_title}: ${response.next_action.action_description || ""}`);
+          }
+          setActions(fallbackActions);
         }
       } catch (error) {
         console.error("Error sending message:", error);
 
-        // Add error message
         const errorMessage = {
-          text: "Sorry, I encountered an error. Please try again.",
+          text: "Sorry, I encountered an error reaching the server. Please try again.",
           sender: "ai",
           timestamp: new Date(),
         };
@@ -86,6 +101,11 @@ function App() {
           </div>
           <div className="header-badge">
             {userId && <span className="session-badge">Session Active</span>}
+            <span
+              className={`api-badge ${apiStatus.usingMock ? "mock" : "live"}`}
+            >
+              {apiStatus.usingMock ? "🟡 Mock" : "🟢 Live"}
+            </span>
           </div>
         </div>
       </header>
@@ -106,7 +126,7 @@ function App() {
           <div className="sidebar-content">
             <ProfileCard profile={profile} />
             <Recommendations recommendations={recommendations} />
-            <Actions nextAction={nextAction} />
+            <Actions actions={actions} />
           </div>
         </aside>
       </main>

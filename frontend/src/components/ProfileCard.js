@@ -3,11 +3,12 @@ import React from "react";
 /**
  * ProfileCard Component
  * Displays extracted user profile information
+ * Matches backend response: { type, risk, interests }
  */
 const ProfileCard = ({ profile }) => {
   if (!profile) {
     return (
-      <div className="profile-card">
+      <div className="profile-card card">
         <h3 className="card-title">👤 Your Profile</h3>
         <p className="empty-state">
           Chat with me to create your personalized profile
@@ -16,39 +17,29 @@ const ProfileCard = ({ profile }) => {
     );
   }
 
-  const {
-    user_type = "Unknown",
-    risk_level = "Unknown",
-    experience_level = "Unknown",
-    interests = [],
-  } = profile;
+  // Backend sends: profile.type, profile.risk, profile.interests (new scheme)
+  // or user_type, risk_level (old scheme deployed)
+  const type = profile.type || profile.user_type || "Unknown";
+  const risk = profile.risk || profile.risk_level || "Unknown";
+  const interests = profile.interests || [];
 
-  const getUserTypeIcon = (type) => {
+  const getUserTypeIcon = (t) => {
     const icons = {
       student: "🎓",
       professional: "💼",
       entrepreneur: "🚀",
       investor: "📈",
     };
-    return icons[type] || "👤";
+    return icons[t] || "👤";
   };
 
-  const getRiskIcon = (risk) => {
+  const getRiskIcon = (r) => {
     const icons = {
       low: "🛡️",
       medium: "⚖️",
       high: "⚡",
     };
-    return icons[risk] || "❓";
-  };
-
-  const getExperienceIcon = (level) => {
-    const icons = {
-      beginner: "🌱",
-      intermediate: "📚",
-      advanced: "🎯",
-    };
-    return icons[level] || "❓";
+    return icons[r] || "❓";
   };
 
   return (
@@ -57,23 +48,16 @@ const ProfileCard = ({ profile }) => {
 
       <div className="profile-item">
         <span className="profile-label">
-          {getUserTypeIcon(user_type)} User Type
+          {getUserTypeIcon(type)} User Type
         </span>
-        <span className="profile-value">{user_type}</span>
+        <span className="profile-value">{type}</span>
       </div>
 
       <div className="profile-item">
         <span className="profile-label">
-          {getRiskIcon(risk_level)} Risk Level
+          {getRiskIcon(risk)} Risk Level
         </span>
-        <span className="profile-value">{risk_level}</span>
-      </div>
-
-      <div className="profile-item">
-        <span className="profile-label">
-          {getExperienceIcon(experience_level)} Experience
-        </span>
-        <span className="profile-value">{experience_level}</span>
+        <span className="profile-value">{risk}</span>
       </div>
 
       {interests && interests.length > 0 && (
@@ -81,9 +65,9 @@ const ProfileCard = ({ profile }) => {
           <span className="profile-label">💡 Interests</span>
           <div className="interests-tags">
             {interests.map((interest, idx) => (
-              <tag key={idx} className="interest-tag">
+              <span key={idx} className="interest-tag">
                 #{interest}
-              </tag>
+              </span>
             ))}
           </div>
         </div>

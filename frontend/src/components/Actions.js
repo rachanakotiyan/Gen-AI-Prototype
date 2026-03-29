@@ -2,37 +2,32 @@ import React from "react";
 
 /**
  * Actions Component
- * Displays the suggested next action as a prominent CTA card
+ * Displays suggested next actions as a list
+ * Matches backend response: actions = ["string", "string", ...]
  */
-const Actions = ({ nextAction = null }) => {
-  if (!nextAction) {
+const Actions = ({ actions = [] }) => {
+  if (!actions || actions.length === 0) {
     return (
       <div className="action-card card">
         <h3 className="card-title">🎯 Next Steps</h3>
         <p className="empty-state">
-          Chat with me to discover your next action
+          Chat with me to discover your next actions
         </p>
       </div>
     );
   }
 
-  const {
-    action_title = "Get Started",
-    action_description = "",
-    cta_text = "Take Action",
-    cta_url = "#",
-  } = nextAction;
-
   return (
-    <div className="action-card card cta-card">
+    <div className="action-card card">
       <h3 className="card-title">🎯 Next Steps</h3>
-      <div className="action-content">
-        <h4 className="action-title">{action_title}</h4>
-        <p className="action-description">{action_description}</p>
-        <a href={cta_url} target="_blank" rel="noopener noreferrer" className="cta-button">
-          {cta_text}
-        </a>
-      </div>
+      <ul className="action-list">
+        {actions.map((action, idx) => (
+          <li key={idx} className="action-list-item">
+            <span className="action-bullet">→</span>
+            <span className="action-text">{action}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };

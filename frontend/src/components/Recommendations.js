@@ -2,7 +2,8 @@ import React from "react";
 
 /**
  * Recommendations Component
- * Displays list of recommendations with service, reason, and clickable URLs
+ * Displays list of recommendations
+ * Matches backend response: [{ title, reason }]
  */
 const Recommendations = ({ recommendations = [] }) => {
   if (!recommendations || recommendations.length === 0) {
@@ -23,26 +24,10 @@ const Recommendations = ({ recommendations = [] }) => {
         {recommendations.map((rec, idx) => (
           <div key={idx} className="recommendation-item">
             <div className="recommendation-header">
-              <h4 className="recommendation-service">{rec.service}</h4>
-              <a
-                href={rec.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="recommendation-link-btn"
-                title="Open in new tab"
-              >
-                ↗
-              </a>
+              {/* Backend sends "title" (not "service") */}
+              <h4 className="recommendation-service">{rec.title}</h4>
             </div>
             <p className="recommendation-reason">{rec.reason}</p>
-            <a
-              href={rec.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="recommendation-link"
-            >
-              Learn More →
-            </a>
           </div>
         ))}
       </div>
