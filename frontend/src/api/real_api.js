@@ -12,7 +12,7 @@ const BASE_URL = process.env.REACT_APP_API_URL || "https://gen-ai-prototype-prod
  */
 const realChatAPI = async (payload) => {
   try {
-    console.log(`🔵 API Request to: ${BASE_URL}/api/chat`);
+    console.log(`[INFO] API Request to: ${BASE_URL}/api/chat`);
     
     const response = await fetch(`${BASE_URL}/api/chat`, {
       method: "POST",
@@ -25,15 +25,15 @@ const realChatAPI = async (payload) => {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       const errorMessage = errorData.detail || `API error: ${response.status} ${response.statusText}`;
-      console.error(`❌ API Error [${response.status}]:`, errorMessage);
+      console.error(`[ERROR] API Error [${response.status}]:`, errorMessage);
       throw new Error(errorMessage);
     }
 
     const data = await response.json();
-    console.log("✅ API Response received successfully");
+    console.log("[OK] API Response received successfully");
     return data;
   } catch (error) {
-    console.error("❌ API Request failed:", error.message);
+    console.error("[ERROR] API Request failed:", error.message);
     throw error;
   }
 };
