@@ -125,7 +125,18 @@ function App() {
         <aside className="sidebar-section">
           <div className="sidebar-content">
             <ProfileCard profile={profile} />
-            <Recommendations recommendations={recommendations} />
+            <Recommendations
+              recommendations={recommendations}
+              onRecommendationClick={(rec) => {
+                if (rec.url) {
+                  window.open(rec.url, "_blank", "noopener,noreferrer");
+                  return;
+                }
+
+                // Use the recommendation title as a follow-up query in chat
+                handleSendMessage(`Show me more about ${rec.title}`);
+              }}
+            />
             <Actions actions={actions} />
           </div>
         </aside>

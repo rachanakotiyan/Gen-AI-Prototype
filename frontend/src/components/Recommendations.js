@@ -5,7 +5,7 @@ import React from "react";
  * Displays list of recommendations
  * Matches backend response: [{ title, reason }]
  */
-const Recommendations = ({ recommendations = [] }) => {
+const Recommendations = ({ recommendations = [], onRecommendationClick }) => {
   if (!recommendations || recommendations.length === 0) {
     return (
       <div className="recommendations-card card">
@@ -25,7 +25,13 @@ const Recommendations = ({ recommendations = [] }) => {
           <div key={idx} className="recommendation-item">
             <div className="recommendation-header">
               {/* Backend sends "title" (not "service") */}
-              <h4 className="recommendation-service">{rec.title}</h4>
+              <button
+                type="button"
+                className="recommendation-service button-link"
+                onClick={() => onRecommendationClick && onRecommendationClick(rec)}
+              >
+                {rec.title}
+              </button>
             </div>
             <p className="recommendation-reason">{rec.reason}</p>
           </div>
