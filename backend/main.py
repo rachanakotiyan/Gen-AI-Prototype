@@ -19,7 +19,7 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup():
     print("\n" + "="*50)
-    print("🚀 Starting ET AI Concierge Backend")
+    print("[STARTUP] Starting ET AI Concierge Backend")
     print("="*50)
     
     # Check environment variables
@@ -32,17 +32,17 @@ async def startup():
     missing_vars = [k for k, v in env_vars.items() if not v]
     
     if missing_vars:
-        print(f"❌ Missing environment variables: {', '.join(missing_vars)}")
+        print(f"[ERROR] Missing environment variables: {', '.join(missing_vars)}")
         print("Application will fail when processing requests!")
     else:
-        print("✅ All environment variables configured")
+        print("[OK] All environment variables configured")
     
     # Try to connect to MongoDB
     try:
         await connect_db()
-        print("✅ MongoDB connection successful")
+        print("[OK] MongoDB connection successful")
     except Exception as e:
-        print(f"❌ MongoDB connection failed: {str(e)}", file=sys.stderr)
+        print(f"[ERROR] MongoDB connection failed: {str(e)}", file=sys.stderr)
         raise
     
     print("="*50 + "\n")
@@ -62,13 +62,13 @@ async def root():
 async def health():
     """Health check endpoint - verify all env vars and dependencies"""
     checks = {
-        "backend": "✅ Running",
-        "GOOGLE_API_KEY": "✅ Configured" if os.getenv("GOOGLE_API_KEY") else "❌ Missing",
-        "MONGODB_URL": "✅ Configured" if os.getenv("MONGODB_URL") else "❌ Missing",
-        "DB_NAME": "✅ Configured" if os.getenv("DB_NAME") else "❌ Missing",
+        "backend": "Running",
+        "GOOGLE_API_KEY": "OK" if os.getenv("GOOGLE_API_KEY") else "MISSING",
+        "MONGODB_URL": "OK" if os.getenv("MONGODB_URL") else "MISSING",
+        "DB_NAME": "OK" if os.getenv("DB_NAME") else "MISSING",
     }
     
-    all_good = all("✅" in v for v in checks.values())
+    all_good = all(v == "OK" or v == "Running" for v in checks.values())
     return {
         "status": "healthy" if all_good else "degraded",
         "checks": checks

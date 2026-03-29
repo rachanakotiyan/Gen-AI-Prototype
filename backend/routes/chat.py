@@ -85,9 +85,9 @@ async def chat(request: Request, payload: ChatRequest):
                 run_profiling_agent(full_conversation),
                 run_intent_agent(full_conversation)   # full context, not just latest message
             )
-            print(f"✅ Profiling & Intent agents completed")
+            print(f"[OK] Profiling & Intent agents completed")
         except Exception as e:
-            print(f"❌ Error in profiling/intent agents: {str(e)}", file=sys.stderr)
+            print(f"[ERROR] Error in profiling/intent agents: {str(e)}", file=sys.stderr)
             print(traceback.format_exc(), file=sys.stderr)
             sys.stderr.flush()
             raise
@@ -103,9 +103,9 @@ async def chat(request: Request, payload: ChatRequest):
         # --- Recommendations + action sequentially (action depends on recs) ---
         try:
             recommendations = await run_recommendation_agent(merged_profile, intent)
-            print(f"✅ Recommendation agent completed")
+            print(f"[OK] Recommendation agent completed")
         except Exception as e:
-            print(f"❌ Error in recommendation agent: {str(e)}", file=sys.stderr)
+            print(f"[ERROR] Error in recommendation agent: {str(e)}", file=sys.stderr)
             print(traceback.format_exc(), file=sys.stderr)
             sys.stderr.flush()
             raise
@@ -113,9 +113,9 @@ async def chat(request: Request, payload: ChatRequest):
         try:
             top_rec = recommendations[0] if recommendations else {}
             action = await run_action_agent(merged_profile, intent, top_rec)
-            print(f"✅ Action agent completed")
+            print(f"[OK] Action agent completed")
         except Exception as e:
-            print(f"❌ Error in action agent: {str(e)}", file=sys.stderr)
+            print(f"[ERROR] Error in action agent: {str(e)}", file=sys.stderr)
             print(traceback.format_exc(), file=sys.stderr)
             sys.stderr.flush()
             raise
@@ -128,9 +128,9 @@ async def chat(request: Request, payload: ChatRequest):
                 recommendations,
                 action
             )
-            print(f"✅ Response agent completed")
+            print(f"[OK] Response agent completed")
         except Exception as e:
-            print(f"❌ Error in response agent: {str(e)}", file=sys.stderr)
+            print(f"[ERROR] Error in response agent: {str(e)}", file=sys.stderr)
             print(traceback.format_exc(), file=sys.stderr)
             sys.stderr.flush()
             raise
@@ -152,7 +152,7 @@ async def chat(request: Request, payload: ChatRequest):
 
     except Exception as e:
         error_details = traceback.format_exc()
-        print(f"❌ ERROR in /chat endpoint:", file=sys.stderr)
+        print(f"[ERROR] ERROR in /chat endpoint:", file=sys.stderr)
         print(error_details, file=sys.stderr)
         sys.stderr.flush()
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")

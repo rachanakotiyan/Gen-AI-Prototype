@@ -14,7 +14,7 @@ load_dotenv()
 # Validate API key at startup
 api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
-    print("❌ ERROR: GOOGLE_API_KEY environment variable not set!", file=sys.stderr)
+    print("[ERROR] GOOGLE_API_KEY environment variable not set!", file=sys.stderr)
     sys.exit(1)
 
 genai.configure(api_key=api_key)
@@ -58,7 +58,7 @@ async def call_llm(system_prompt: str, user_message: str, json_mode: bool = Fals
         result_text = response.text or ""
         
         if not result_text:
-            print(f"⚠️  Warning: LLM returned empty response", file=sys.stderr)
+            print(f"[WARNING] LLM returned empty response", file=sys.stderr)
             return "{}" if json_mode else ""
         
         if len(_openai_cache) >= OPENAI_CACHE_MAX:
@@ -72,7 +72,7 @@ async def call_llm(system_prompt: str, user_message: str, json_mode: bool = Fals
     
     except Exception as e:
         import traceback
-        print(f"❌ Error in call_llm: {str(e)}", file=sys.stderr)
+        print(f"[ERROR] Error in call_llm: {str(e)}", file=sys.stderr)
         print(f"Traceback: {traceback.format_exc()}", file=sys.stderr)
         if json_mode:
             return '{"error": "LLM call failed"}'

@@ -13,7 +13,7 @@ db_instance = MongoDB()
 async def connect_db():
     db_instance.client = AsyncIOMotorClient(os.getenv("MONGODB_URL"))
     db_instance.db = db_instance.client[os.getenv("DB_NAME")]
-    print("✅ MongoDB connected")
+    print("[OK] MongoDB connected")
 
 async def disconnect_db():
     db_instance.client.close()
